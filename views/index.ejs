@@ -1,0 +1,19 @@
+
+
+<ul class="list-group mt-4">
+    <% data.forEach(book => { %>       
+        <li class="list-group-item">
+            <div class="flex">
+                  <a href="/books/<%= book._id %>">
+                    <%= book.name %>  
+                </a>
+                <% if (user && user.is_admin) { %>
+                    <form action="/books/delete/<%= book._id %>?_method=DELETE" method="POST">
+                        <input type="submit" class="btn btn-outline-danger" value="Delete">
+                    </form>
+                <% } %>
+              
+            </div>
+        </li>
+    <% }) %>
+</ul>

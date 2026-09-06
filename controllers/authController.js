@@ -1,85 +1,95 @@
-import validator from 'validator';
-import { getDBConnection } from "../db/db.js"
-import bcrypt from 'bcryptjs';
+import Book from '../db/models/Book.js';
+import User from '../db/models/User.js'
+import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
+import 'dotenv/config';
+
+const jwtSecret = process.env.JWT_SECRET
+
+export async function showRegister(req, res){
+    res.render('auth/register')
+}
 
 export async function register(req, res){
-    let { name, email, password } = req.body
-    if(!name || !email || !password){
-        return res.json({msg: "all fields are required"})
+   try {
+    const { username, password } = req.body;
+    const errors = {};
+
+    // 1. Manual validation checks
+    if (!username || username.trim() === '') {
+        errors.username = 'Username is required.';
     }
-    name = name.trim()
-    email = email.trim()
-    password = await bcrypt.hash(password, 10)
-
-    console.log(req.session)
-
-    if (!validator.isEmail(email)) {
-
-        return res.status(400).json({ error: 'Invalid email format' })
-
-    }
-  try{
-    
-    let query = 'SELECT exists(SELECT 1 FROM users WHERE email = ?) AS row_exists'
-
-    const db = await getDBConnection()
-    const emailExists = await db.get(query,[email])  
-    console.log(emailExists.row_exists)
-    if(emailExists.row_exists){
-        return res.status(400).json({msg: "user exists, please login"})
+    if (!password || password.length < 6) {
+        errors.password = 'Password must be at least 6 characters long.';
     }
 
-    const userRecord = await db.run(
-        'INSERT INTO users(name, email, password) VALUES(?, ?, ?)', 
-        [name, email, password]
-    )
-    req.session.userId = userRecord.lastID
-    console.log("SESSION DATA:", req.session);
-    console.log("USER ID IN SESSION:", req.session.userId);
-    return res.status(201).send({msg: "user created successfully"})
-  }catch(err){
-    console.error('Registration error:', err.message);
-    res.status(500).json({ error: 'Registration failed. Please try again.' })
+    // If validation fails, re-render form with errors and old input
+    if (Object.keys(errors).length > 0) {
+        return res.render('auth/register', { errors, oldInput: req.body });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    try {
+      const user = await User.create({ username, password:hashedPassword });
+    //   res.status(201).json({ message: 'User Created', user });
+        res.redirect('/login')
+    } catch (error) {
+      if(error.code === 11000) {
+        res.status(409).json({ message: 'User already in use'});
+      }
+      res.status(500).json({ message: 'Internal server error'})
+    }
+
+  } catch (error) {
+    console.log(error);
   }
 }
 
-export async function loginUser(req, res){
-   let { email, password } = req.body
-    if(!email || !password){
-        return res.json({msg: "all fields are required"})
-    }
-    email = email.trim()
+export async function login(req, res){
 
-    try{
-       const db = await getDBConnection()
-      let user = await db.get('SELECT * FROM users WHERE email = ?', [email])
-
-      if(!user){
-        return res.json({error: "invalid email"})
-      }
-      const isPasswordValid = await bcrypt.compare(password, user.password)
-      if(!isPasswordValid){
-        return res.status(401).json({ error: 'Invalid password' })
-      }
-     
-      req.session.userId = user.id
-      console.log("SESSION DATA:", req.session);
-      console.log("USER ID IN SESSION:", req.session.userId);
-      res.status(200).json({ message: 'Logged in' })
-
-    }catch(err){
-      console.error('Registration error:', err.message);
-      res.status(500).json({ error: 'Registration failed. Please try again.' })
-    }
+    return res.render('auth/login')
 }
 
-export async function logoutUser(req, res){
-  req.session.destroy((err) => {
-        if (err) {
-            return res.status(500).json({ error: 'Could not log out, please try again' })
-        }
-        res.clearCookie('connect.sid')
+export async function checkLogin(req, res){
+    try {
+        const { username, password } = req.body;
+        const errors = {};
 
-        return res.status(200).json({ msg: 'Logged out successfully' })
-    })
+        // 1. Manual validation checks
+        if (!username || username.trim() === '') {
+            errors.username = 'Username is required.';
+        }
+        if (!password) {
+            errors.password = 'Password is required.';
+        }
+
+        if (Object.keys(errors).length > 0) {
+            return res.render('auth/login', { errors, oldInput: req.body });
+        }
+        const user = await User.findOne( { username } );
+
+        if(!user) {
+        return res.status(401).json( { message: 'Invalid credentials' } );
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+
+        if(!isPasswordValid) {
+        return res.status(401).json( { message: 'Invalid credentials' } );
+        }
+
+        const token = jwt.sign({ userId: user._id, is_admin: user.is_admin, username: user.username}, jwtSecret );
+        res.cookie('token', token, { httpOnly: true });
+        return res.redirect('/');
+  } catch (error) {
+        console.log(error);
+  }
+ 
+}
+
+export function logout(req, res){
+    res.clearCookie('token');
+    //res.json({ message: 'Logout successful.'});
+    res.redirect('/login');
 }
