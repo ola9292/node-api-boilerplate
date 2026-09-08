@@ -75,7 +75,7 @@ export async function checkLogin(req, res){
         const isPasswordValid = await bcrypt.compare(password, user.password);
 
         if(!isPasswordValid) {
-        return res.status(401).json( { message: 'Invalid credentials' } );
+          return res.status(401).json( { message: 'Invalid credentials' } );
         }
 
         const token = jwt.sign({ userId: user._id, is_admin: user.is_admin, username: user.username}, jwtSecret );

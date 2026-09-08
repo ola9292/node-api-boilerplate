@@ -1,6 +1,7 @@
 import express from "express";
 import session from "express-session"
 import authRouter from "./routes/auth.js"
+import fileRouter from "./routes/file.js"
 import 'dotenv/config';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -9,6 +10,7 @@ import methodOverride from 'method-override'
 import expressLayouts from "express-ejs-layouts";
 import cookieParser from 'cookie-parser';
 import MongoStore from 'connect-mongo';
+import connectDB from "./db/db.js";
 import attachUser from "./middleware/attachUser.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -48,11 +50,11 @@ app.use(session({
 app.use(attachUser);
 
 //connect to db
-// connectDB()
+connectDB()
 
 const PORT = 5001
 
-// app.use('/', bookRouter)
+app.use('/', fileRouter)
 app.use('/', authRouter)
 
 // import Book from "./db/models/Book.js"
