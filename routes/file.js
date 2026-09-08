@@ -1,7 +1,6 @@
 import express from "express"
 import { index, upload, download, showDownload } from '../controllers/fileController.js'
 import multer from "multer"
-const maxSize = 10;
 const fileUpload = multer({ dest: 'uploads/' })
 
 const router = express.Router()

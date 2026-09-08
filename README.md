@@ -12,7 +12,7 @@ A robust, production-ready RESTful API built with Node.js, Express, and MongoDB 
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Runtime**: Node.js
 - **Framework**: Express.js
