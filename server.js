@@ -12,6 +12,7 @@ import cookieParser from 'cookie-parser';
 import MongoStore from 'connect-mongo';
 import connectDB from "./db/db.js";
 import attachUser from "./middleware/attachUser.js";
+import connectDB from "./db/db.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
