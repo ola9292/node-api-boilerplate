@@ -2,6 +2,7 @@ import express from "express";
 import session from "express-session"
 import authRouter from "./routes/auth.js"
 import fileRouter from "./routes/file.js"
+import blogRouter from "./routes/blog.js"
 import 'dotenv/config';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -13,6 +14,7 @@ import MongoStore from 'connect-mongo';
 import connectDB from "./db/db.js";
 import attachUser from "./middleware/attachUser.js";
 import connectDB from "./db/db.js";
+import errorHandler from "./middleware/errorHandler.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -57,6 +59,10 @@ const PORT = 5001
 
 app.use('/', fileRouter)
 app.use('/', authRouter)
+app.use('/api/blogs', blogRouter)
+
+//Global error handler
+app.use(errorMiddleware)
 
 // import Book from "./db/models/Book.js"
 // async function updateUser(){
