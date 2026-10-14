@@ -2,7 +2,7 @@ import express from "express";
 import session from "express-session"
 import authRouter from "./routes/auth.js"
 import fileRouter from "./routes/file.js"
-import blogRouter from "./routes/blog.js"
+import compileRouter from "./routes/compiler.js"
 import 'dotenv/config';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -11,10 +11,10 @@ import methodOverride from 'method-override'
 import expressLayouts from "express-ejs-layouts";
 import cookieParser from 'cookie-parser';
 import MongoStore from 'connect-mongo';
-import connectDB from "./db/db.js";
 import attachUser from "./middleware/attachUser.js";
 import connectDB from "./db/db.js";
 import errorHandler from "./middleware/errorHandler.js";
+import cors from 'cors';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -52,8 +52,16 @@ app.use(session({
 //get current user globaly
 app.use(attachUser);
 
+// Enable CORS for your specific Vue frontend origin
+app.use(cors({
+    origin: 'http://localhost:5173', // Your Vue dev server URL
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+}));
+
 //connect to db
-connectDB()
+// connectDB()
 
 const PORT = 5001
 
