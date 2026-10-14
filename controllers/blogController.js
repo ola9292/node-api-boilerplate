@@ -54,11 +54,11 @@ export default async function createBlog(req, res, next){
 export default async function updateBlog(req, res, next){
         const { title, content } = req.body
         try{
-            await Blog.findByIdAndUpdate(req.params.id, {
+          const blog = await Blog.findByIdAndUpdate(req.params.id, {
                 title,
                 content
             }); 
-            res.status(201).json({
+            res.status(200).json({
                 success: true,
                 data: blog
             })
@@ -78,7 +78,7 @@ export default async function deleteBlog(req, res, next){
         await Blog.findByIdAndDelete(id)
         return res.status(200).json({
             success:true,
-            message: "appointment cancelled successfully"
+            data:""
         })
     }catch(err){
         console.error(err);
